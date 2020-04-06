@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import Switch from "@material-ui/core/Switch";
@@ -20,9 +20,6 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import {Route} from "react-router-dom";
-
-import { spacing } from '@material-ui/system';
 
 // Credit: https://www.math.ucla.edu/~tom/distributions/binomial.html
 function bionomial_cdf(X, N, P) {
@@ -437,10 +434,13 @@ function RefValueTable(pulls,rewards){
     );
 }
 
-export function GachaTool() {
+export function GachaTool(setTitle) {
     const [rewards, setRewards] = useState({});
     const {value: pulls, bind: bindPulls} = useInput(0);
     const spark_value = calc_spark_value(300 - pulls, rewards);
+    useEffect(()=>{
+        setTitle("Gacha Tool")
+    });
     return (
         <div>
             <Grid container spacing={3}>
