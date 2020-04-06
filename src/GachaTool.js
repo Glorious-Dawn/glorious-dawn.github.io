@@ -249,17 +249,19 @@ function ProfileSelect(rewards, setRewards) {
             'Perm': [0.0225, 2, true]
         },
         "Cinfes-2": {
-            'Focus-1': [0.005, 30, true],
-            'Focus-2': [0.005, 20, true],
+            'Focus-1': [0.005, 20, true],
+            'Focus-2': [0.005, 15, true],
             'Fes-Type': [0.00375, 15, true],
             'Fes-Other': [0.00375, 15, true],
-            'Perm': [0.0425, 2, true]
+            'Perm': [0.0425, 2, true],
+            'Fes-Spark': [0, 30, true]
         },
         "Cinfes-1": {
-            'Focus-1': [0.0075, 30, true],
+            'Focus-1': [0.0075, 20, true],
             'Fes-Type': [0.00375, 15, true],
             'Fes-Other': [0.00375, 15, true],
-            'Perm': [0.045, 2, true]
+            'Perm': [0.045, 2, true],
+            'Fes-Spark': [0, 30, true]
         },
         "Empty":{
 
