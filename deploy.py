@@ -2,7 +2,7 @@ from subprocess import run
 
 def deploy():
     run(['git','checkout','dev'],check=True)
-    run(['npm','run','build'],check=True)
+    run('npm run build',check=True,shell=True)
     run(['git','fetch'],check=True)
     run(['git','checkout','gh-pages'],check=True)
     run(['git','pull'],check=True)
