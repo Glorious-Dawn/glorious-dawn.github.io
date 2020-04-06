@@ -1,6 +1,13 @@
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import React, {useEffect} from "react";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import {Link as RouterLink} from "react-router-dom";
+import ListItemText from "@material-ui/core/ListItemText";
+import Divider from '@material-ui/core/Divider';
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import StarIcon from "@material-ui/icons/Star";
 
 export function HomePage(setTitle) {
     useEffect(()=>{
@@ -11,6 +18,18 @@ export function HomePage(setTitle) {
             {/* Chart */}
             <Grid item xs={12} md={8} lg={9}>
                 <Paper>
+                    <List>
+                        <ListItem component="h2" variant="h6" color="inherit" noWrap>
+                                Available tools:
+                        </ListItem>
+                        <Divider/>
+                        <ListItem component={RouterLink} to="/gacha">
+                            <ListItemIcon>
+                                <StarIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Gacha" />
+                        </ListItem>
+                    </List>
                 </Paper>
             </Grid>
             {/* Recent Deposits */}

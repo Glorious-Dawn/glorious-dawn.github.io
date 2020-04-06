@@ -401,7 +401,7 @@ function RefValueTable(pulls,rewards){
                 <TableCell>
                     {
                         rv[2]
-                            ? <Button variant="outlined" color="primary" onClick={e => handleAdd(rv)}>Add</Button>
+                            ? <Button variant="outlined" color="primary" onClick={e => handleAdd(rv)}>Pin</Button>
                             : <Button variant="outlined" color="secondary" onClick={e => removeRefValue(rv[0])}>Del</Button>
                     }
                 </TableCell>
