@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import Switch from "@material-ui/core/Switch";
@@ -20,6 +20,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import PageFrame from "./PageFrame";
 
 // Credit: https://www.math.ucla.edu/~tom/distributions/binomial.html
 function bionomial_cdf(X, N, P) {
@@ -116,7 +117,7 @@ function calc_spark_value(n, rewards) {
     vals.forEach(x => {
         let fail = bionomial_cdf(0, n, x[1]);
         value += prob * fail * x[0];
-        prob *= (1-fail);
+        prob *= (1 - fail);
     });
     return value;
 }
@@ -136,29 +137,29 @@ const useInput = initialValue => {
     };
 };
 
-function NameInputDialog(description,title,open,handleCancel,handleConfirm,bindName){
-    return(
-    <Dialog open={open} onClose={handleCancel} aria-labelledby="form-dialog-title">
-        <DialogTitle id="form-dialog-title">Save Profile</DialogTitle>
-        <DialogContent>
-            <DialogContentText>
-                {description}
-            </DialogContentText>
-            <TextField
-                autoFocus
-                margin="dense"
-                id="profileName"
-                label="Profile Name"
-                fullWidth
-                {...bindName}
-            />
-        </DialogContent>
-        <DialogActions>
-            <Button onClick={handleConfirm} color="primary">
-                Confirm
-            </Button>
-        </DialogActions>
-    </Dialog>);
+function NameInputDialog(description, title, open, handleCancel, handleConfirm, bindName) {
+    return (
+        <Dialog open={open} onClose={handleCancel} aria-labelledby="form-dialog-title">
+            <DialogTitle id="form-dialog-title">Save Profile</DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    {description}
+                </DialogContentText>
+                <TextField
+                    autoFocus
+                    margin="dense"
+                    id="profileName"
+                    label="Profile Name"
+                    fullWidth
+                    {...bindName}
+                />
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleConfirm} color="primary">
+                    Confirm
+                </Button>
+            </DialogActions>
+        </Dialog>);
 }
 
 function RewardTable(rewards, setRewards, headers) {
@@ -216,14 +217,17 @@ function RewardTable(rewards, setRewards, headers) {
                     {rewardList}
                     <TableRow>
                         <TableCell padding="none"/>
-                        <TableCell padding="none" size="small"><TextField fullWidth label="Name" variant="outlined" size="small"
-                                              required {...bindRaddN}/></TableCell>
-                        <TableCell padding="none" size="small"><TextField fullWidth label="Prob" variant="outlined" size="small"
-                                              required {...bindRaddP}/></TableCell>
-                        <TableCell padding="none" size="small"><TextField fullWidth label="Value" variant="outlined" size="small"
-                                              required {...bindRaddV}/></TableCell>
+                        <TableCell padding="none" size="small"><TextField fullWidth label="Name" variant="outlined"
+                                                                          size="small"
+                                                                          required {...bindRaddN}/></TableCell>
+                        <TableCell padding="none" size="small"><TextField fullWidth label="Prob" variant="outlined"
+                                                                          size="small"
+                                                                          required {...bindRaddP}/></TableCell>
+                        <TableCell padding="none" size="small"><TextField fullWidth label="Value" variant="outlined"
+                                                                          size="small"
+                                                                          required {...bindRaddV}/></TableCell>
                         <TableCell size="small"><Button variant="contained" color="primary"
-                                           onClick={addReward}>Add</Button></TableCell>
+                                                        onClick={addReward}>Add</Button></TableCell>
                     </TableRow>
                 </TableBody>
             </Table>
@@ -263,22 +267,20 @@ function ProfileSelect(rewards, setRewards) {
             'Perm': [0.045, 2, true],
             'Fes-Spark': [0, 30, true]
         },
-        "Empty":{
-
-        }
+        "Empty": {}
     };
     let localProfiles = localStorage.getItem("profiles");
-    if (localProfiles===null){
-        localProfiles=defaultProfiles;
-        localStorage.setItem("profiles",JSON.stringify(localProfiles));
-    }else{
-        localProfiles=JSON.parse(localProfiles);
+    if (localProfiles === null) {
+        localProfiles = defaultProfiles;
+        localStorage.setItem("profiles", JSON.stringify(localProfiles));
+    } else {
+        localProfiles = JSON.parse(localProfiles);
     }
     const [profiles, setProfiles] = useState(localProfiles);
-    let defaultSelected="";
-    for (let pname in profiles){
+    let defaultSelected = "";
+    for (let pname in profiles) {
         if (!profiles.hasOwnProperty(pname)) continue;
-        defaultSelected=pname;
+        defaultSelected = pname;
         break;
     }
 
@@ -294,10 +296,10 @@ function ProfileSelect(rewards, setRewards) {
     const handleDelete = (e) => {
         e.preventDefault();
         if (profile === "" || !profiles.hasOwnProperty(profile)) return;
-        const newProfiles={...profiles};
+        const newProfiles = {...profiles};
         delete newProfiles[profile];
         resetProfileName();
-        localStorage.setItem("profiles",JSON.stringify(newProfiles));
+        localStorage.setItem("profiles", JSON.stringify(newProfiles));
         setProfiles(newProfiles);
     };
     const handleSave = (e) => {
@@ -307,8 +309,8 @@ function ProfileSelect(rewards, setRewards) {
 
     const handleConfirm = (e) => {
         e.preventDefault();
-        const newProfiles={...profiles,[profileName]: {...rewards}};
-        localStorage.setItem("profiles",JSON.stringify(newProfiles));
+        const newProfiles = {...profiles, [profileName]: {...rewards}};
+        localStorage.setItem("profiles", JSON.stringify(newProfiles));
         setOpen(false);
         setProfiles(newProfiles);
     };
@@ -337,74 +339,77 @@ function ProfileSelect(rewards, setRewards) {
                     <Button variant="contained" fullWidth onClick={handleLoad}>Load</Button>
                 </Grid>
                 <Grid item xs={4}>
-                    <Button margin="normal" variant="contained" fullWidth color="secondary" onClick={handleDelete}>Delete</Button>
+                    <Button margin="normal" variant="contained" fullWidth color="secondary"
+                            onClick={handleDelete}>Delete</Button>
                 </Grid>
-                    <Grid item xs={4}>
-                        <Button margin="normal" variant="contained" fullWidth color="primary" onClick={handleSave}>Save</Button>
-                    </Grid>
+                <Grid item xs={4}>
+                    <Button margin="normal" variant="contained" fullWidth color="primary"
+                            onClick={handleSave}>Save</Button>
+                </Grid>
             </Grid>
             {
                 NameInputDialog("Enter the name for current gacha profile to save(override if exists):",
-                "Save Profile",
-                open,
-                handleCancel,
-                handleConfirm,
-                bindProfileName)
+                    "Save Profile",
+                    open,
+                    handleCancel,
+                    handleConfirm,
+                    bindProfileName)
             }
         </div>
     );
 }
 
-function RefValueTable(pulls,rewards){
-    let defaultRefValues=localStorage.getItem("refValues");
-    if (defaultRefValues===null){
-        defaultRefValues=[];
-        localStorage.setItem("refValues",JSON.stringify([]));
-    }else{
-        defaultRefValues=JSON.parse(defaultRefValues);
+function RefValueTable(pulls, rewards) {
+    let defaultRefValues = localStorage.getItem("refValues");
+    if (defaultRefValues === null) {
+        defaultRefValues = [];
+        localStorage.setItem("refValues", JSON.stringify([]));
+    } else {
+        defaultRefValues = JSON.parse(defaultRefValues);
     }
-    const [refValues,setRefValues]=useState(defaultRefValues);
+    const [refValues, setRefValues] = useState(defaultRefValues);
 
     const removeRefValue = (name) => {
-        let newVal = refValues.filter(x=>x[0]!==name);
-        localStorage.setItem("refValues",JSON.stringify(newVal));
+        let newVal = refValues.filter(x => x[0] !== name);
+        localStorage.setItem("refValues", JSON.stringify(newVal));
         setRefValues(newVal);
     };
 
     const [open, setOpen] = React.useState(false);
     const {value: refValueName, bind: bindRefValueName} = useInput("");
-    const [selectedRefValue,setSelectedRefValue]=useState([]);
-    const handleAdd=(refValue)=>{
+    const [selectedRefValue, setSelectedRefValue] = useState([]);
+    const handleAdd = (refValue) => {
         setSelectedRefValue(refValue);
         setOpen(true);
     };
 
-    const handleCancel=()=>{
+    const handleCancel = () => {
         setOpen(false);
     };
 
     const addRefValue = () => {
-        let newVal = refValues.filter(x=>x[0]!==refValueName);
-        newVal.push([refValueName,selectedRefValue[1]]);
-        localStorage.setItem("refValues",JSON.stringify(newVal));
+        let newVal = refValues.filter(x => x[0] !== refValueName);
+        newVal.push([refValueName, selectedRefValue[1]]);
+        localStorage.setItem("refValues", JSON.stringify(newVal));
         setRefValues(newVal);
         setOpen(false);
     };
 
-    let pullsToSpark=300-pulls;
-    let valueSpark=(calc_gacha_value(pullsToSpark, rewards) + calc_spark_value(pullsToSpark, rewards)) / pullsToSpark;
-    let value10=calc_gacha_value(10,rewards) / 10;
+    let pullsToSpark = 300 - pulls;
+    let valueSpark = (calc_gacha_value(pullsToSpark, rewards) + calc_spark_value(pullsToSpark, rewards)) / pullsToSpark;
+    let value10 = calc_gacha_value(10, rewards) / 10;
     let refValueRows = [];
-    for (let rv of [...refValues,["10 Pulls",value10,true],[pullsToSpark+" Pulls",valueSpark,true]].sort((a,b)=>b[1]-a[1])) {
+    for (let rv of [...refValues, ["10 Pulls", value10, true], [pullsToSpark + " Pulls", valueSpark, true]].sort((a, b) => b[1] - a[1])) {
         refValueRows.push(
             <TableRow key={rv[0]}>
-                <TableCell style={rv[2]?{background:"LightGreen"}:{background:"white"}}>{rv[0]}</TableCell>
-                <TableCell>{Math.round(rv[1]*100000)/100000}</TableCell>
+                <TableCell style={rv[2] ? {background: "LightGreen"} : {background: "white"}}>{rv[0]}</TableCell>
+                <TableCell>{Math.round(rv[1] * 100000) / 100000}</TableCell>
                 <TableCell>
                     {
                         rv[2]
                             ? <Button variant="outlined" color="primary" onClick={e => handleAdd(rv)}>Pin</Button>
-                            : <Button variant="outlined" color="secondary" onClick={e => removeRefValue(rv[0])}>Del</Button>
+                            : <Button variant="outlined" color="secondary"
+                                      onClick={e => removeRefValue(rv[0])}>Del</Button>
                     }
                 </TableCell>
             </TableRow>
@@ -436,43 +441,38 @@ function RefValueTable(pulls,rewards){
     );
 }
 
-export function GachaTool(setTitle) {
+export function GachaToolPage() {
     const [rewards, setRewards] = useState({});
     const {value: pulls, bind: bindPulls} = useInput(0);
     const spark_value = calc_spark_value(300 - pulls, rewards);
-    useEffect(()=>{
-        setTitle("Gacha Tool")
-    });
     return (
-        <div>
+        <PageFrame title="Gacha Tool">
             <Grid container spacing={3}>
-                {/* Chart */}
                 <Grid container item xs={12} md={4} lg={3}>
                     <Paper>
-                        <TextField autoFocus margin="normal" label="Pulls Done" variant="outlined" required {...bindPulls}/>
+                        <TextField autoFocus margin="normal" label="Pulls Done" variant="outlined"
+                                   required {...bindPulls}/>
                         {
                             ProfileSelect(rewards, setRewards)
                         }
                         <Typography variant="subtitle1">Estimated spark value: {spark_value}</Typography>
                     </Paper>
                 </Grid>
-                {/* Recent Deposits */}
                 <Grid item xs={12} md={8} lg={9}>
                     <Paper>
                         {
-                            RefValueTable(pulls,rewards)
+                            RefValueTable(pulls, rewards)
                         }
                     </Paper>
                 </Grid>
-                {/* Recent Orders */}
                 <Grid item xs={12}>
                     <Paper>
+                        {
+                            RewardTable(rewards, setRewards, ['Reward', 'Prob', 'Value', 'Action'])
+                        }
                     </Paper>
                 </Grid>
             </Grid>
-            {
-                RewardTable(rewards, setRewards, ['Reward', 'Prob', 'Value', 'Action'])
-            }
-        </div>
+        </PageFrame>
     );
 }
