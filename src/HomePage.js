@@ -15,7 +15,6 @@ export function HomePage() {
     return (
         <PageFrame title="Glorious Dawn's Home">
             <Grid container spacing={3}>
-                {/* Chart */}
                 <Grid item xs={12} md={8} lg={9}>
                     <Paper>
                         <List>
@@ -38,12 +37,10 @@ export function HomePage() {
                         </List>
                     </Paper>
                 </Grid>
-                {/* Recent Deposits */}
                 <Grid item xs={12} md={4} lg={3}>
                     <Paper>
                     </Paper>
                 </Grid>
-                {/* Recent Orders */}
                 <Grid item xs={12}>
                     <Paper>
                     </Paper>

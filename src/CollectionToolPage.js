@@ -1,14 +1,17 @@
-// eslint-disable-next-line import/no-webpack-loader-syntax
-import tracking from './cv/tracking';
 import PageFrame from "./PageFrame";
-import React, {useRef} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
-import {useEventListener} from "./hooks";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
+import {useEventListener, useInput} from "./hooks";
+import GeneralTable from "./component/GeneralTable";
+
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import MatchWorker from 'worker-loader!./cv/MatchWorker'
+import {useMutableSortedRows} from "./hook/MutableSortedRows";
+import Button from "@material-ui/core/Button";
+import tracking from "./cv/tracking";
 
 function handleDropImages(e, imageCallBack) {
     e.preventDefault();
@@ -24,6 +27,7 @@ function handleDropImages(e, imageCallBack) {
             image.onload = () => {
                 imageCallBack(image);
             };
+            image.id = imageFile.name.split('.')[0];
             image.src = e.target.result;
         };
         reader.readAsDataURL(imageFile);
@@ -40,19 +44,6 @@ function loadImageDataOnCanvas(image, canvas, x = 0, y = 0) {
     return context.getImageData(x, y, width, height);
 }
 
-function matchImageDataInGrayscale(imageDataA, imageDataB, threshold) {
-    let mainGray = tracking.Image.grayscale(imageDataA.data, imageDataA.width, imageDataA.height);
-    let mainCorners = tracking.Fast.findCorners(mainGray, imageDataA.width, imageDataA.height);
-    let mainDescriptors = tracking.Brief.getDescriptors(mainGray, imageDataA.width, mainCorners);
-    let subGray = tracking.Image.grayscale(imageDataB.data, imageDataB.width, imageDataB.height);
-    let subCorners = tracking.Fast.findCorners(subGray, imageDataB.width, imageDataB.height);
-    let subDescriptors = tracking.Brief.getDescriptors(subGray, imageDataB.width, subCorners);
-    let matches = tracking.Brief.reciprocalMatch(mainCorners, mainDescriptors, subCorners, subDescriptors);
-    if (threshold !== undefined)
-        matches = matches.filter(x => x.confidence >= threshold);
-    return matches
-}
-
 function drawPoints(canvasContext, points) {
     for (var i = 0; i < points.length; i++) {
         var color = '#FF0000';// + Math.floor(Math.random()*16777215).toString(16);
@@ -63,44 +54,37 @@ function drawPoints(canvasContext, points) {
     }
 }
 
-// function ImageDrop(imageDataCallback){
-//     const canvas = useRef(null);
-//     const handleDrop = (e) => {
-//         e.preventDefault();
-//             const imageFile=e.dataTransfer.files[0];
-//             if(!imageFile.type.match(/image.*/)){
-//                 console.log("The dropped file is not an image: ", imageFile.type);
-//                 return;
-//             }
-//             //call-back hell
-//             const reader = new FileReader();
-//             reader.onload = e=> {
-//                 let image = new Image();
-//                 image.onload=()=>{
-//                     const context=canvas.current.getContext('2d');
-//                     let width=image.width;
-//                     let height=image.height;
-//                     canvas.current.width=width;
-//                     canvas.current.height=height;
-//                     context.drawImage(image,0,0,width,height);
-//                     imageDataCallback(context.getImageData(0, 0, width, height),canvas);
-//                 };
-//                 image.src = e.target.result;
-//             };
-//             reader.readAsDataURL(imageFile);
-//         };
-//
-//     return(
-//       <Paper onDragOver={event => event.preventDefault()} onDrop={handleDrop}>
-//           <canvas ref={canvas} />
-//       </Paper>
-//     );
-// }
-
 export function CollectionToolPage() {
+    const {rows: matchedItems, setRows: setMatchedItems, upsert: upsertMatchedItems, remove: removeMatchedItems} =
+        useMutableSortedRows([], (a, b) => b[1] - a[1]);
     const mainCanvasRef = useRef(null);
     const subCanvasRef = useRef(null);
     const mainImageDataRef = useRef(null);
+    const workersRef = useRef([]);
+    const nextWorkerRef = useRef(0);
+
+    const createWorkers = useEffect(() => {
+        for (let i = 0; i < 8; i++) {
+            let worker = new MatchWorker();
+            worker.onmessage = function (event) {
+                const matches = event.data[1];
+                console.log("worker " + i + ": Image " + event.data[0] + ' matches=' + matches.length);
+                drawPoints(mainCanvasRef.current.getContext('2d'), matches.map(x => x.keypoint2));
+                //Add to table
+                const item=[event.data[0],event.data[1].length];
+                item.push(
+                    <Button variant="contained" color="secondary"
+                            onClick={e => removeMatchedItems(item)}>Del</Button>
+                );
+                upsertMatchedItems(item);
+            };
+            workersRef.current.push(worker);
+        }
+        return ()=>{
+            for (let worker of workersRef.current)
+                worker.terminate();
+        };
+    }, []);
 
     const mainDropCallback = function (image) {
         mainImageDataRef.current = loadImageDataOnCanvas(image, mainCanvasRef.current);
@@ -110,6 +94,8 @@ export function CollectionToolPage() {
         // let matches=matchImageDataInGrayscale(subImageData,mainImageData,0.8);
         // drawMatches(matches);
         const subImageData = loadImageDataOnCanvas(image, subCanvasRef.current);
+        workersRef.current[nextWorkerRef.current].postMessage([image.id,subImageData,mainImageDataRef.current])
+        nextWorkerRef.current=(nextWorkerRef.current+1)%8;
         // const matches=matchImageDataInGrayscale(subImageData,mainImageDataRef.current,0.8);
         // drawPoints(mainCanvasRef.current.getContext('2d'),matches.map(x=>x.keypoint2));
     };
@@ -122,12 +108,14 @@ export function CollectionToolPage() {
                         <canvas ref={mainCanvasRef}/>
                     </Paper>
                 </Grid>
-
             </Grid>
             <Grid item xs={12} md={3} lg={3}>
                 <Paper onDragOver={e => e.preventDefault()} onDrop={e => handleDropImages(e, subDropCallback)}>
                     <canvas ref={subCanvasRef}/>
                 </Paper>
+            </Grid>
+            <Grid item xs={12}>
+                <GeneralTable headers={['Name','Matches','Remove']} items={matchedItems}/>
             </Grid>
         </PageFrame>
     );
