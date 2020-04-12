@@ -22,6 +22,8 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import PageFrame from "./PageFrame";
 
+import {useInput} from "./hooks"
+
 // Credit: https://www.math.ucla.edu/~tom/distributions/binomial.html
 function bionomial_cdf(X, N, P) {
     function LogGamma(Z) {
@@ -122,21 +124,6 @@ function calc_spark_value(n, rewards) {
     return value;
 }
 
-const useInput = initialValue => {
-    const [value, setValue] = useState(initialValue);
-    return {
-        value,
-        setValue,
-        reset: () => setValue(""),
-        bind: {
-            value,
-            onChange: event => {
-                setValue(event.target.value);
-            }
-        }
-    };
-};
-
 function NameInputDialog(description, title, open, handleCancel, handleConfirm, bindName) {
     return (
         <Dialog open={open} onClose={handleCancel} aria-labelledby="form-dialog-title">
@@ -210,7 +197,7 @@ function RewardTable(rewards, setRewards, headers) {
                         <TableCell padding="none">
                             <Switch disabled/>
                         </TableCell>
-                        {headers.map(h => (<TableCell padding="none" align="center" key={h}>{h}</TableCell>))}
+                        {headers.map(h => (<TableCell padding="none" key={h}>{h}</TableCell>))}
                     </TableRow>
                 </TableHead>
                 <TableBody>

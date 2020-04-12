@@ -24,8 +24,9 @@ import {
     Link as RouterLink
 } from "react-router-dom";
 
-import StarIcon from '@material-ui/icons/Star'
 import HomeIcon from '@material-ui/icons/Home';
+import StarIcon from '@material-ui/icons/Star'
+import CollectionsIcon from '@material-ui/icons/Collections';
 
 const drawerWidth = 240;
 
@@ -172,6 +173,12 @@ export default function PageFrame({title,children}) {
                                 <StarIcon />
                             </ListItemIcon>
                             <ListItemText primary="Gacha" />
+                        </ListItem>
+                        <ListItem component={RouterLink} to="/collection">
+                            <ListItemIcon>
+                                <CollectionsIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Collection" />
                         </ListItem>
                     </List>
                 </Drawer>

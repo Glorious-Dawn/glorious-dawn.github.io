@@ -8,11 +8,15 @@ import {
 
 import {GachaToolPage} from "./GachaToolPage";
 import {HomePage} from "./HomePage";
+import {CollectionToolPage} from "./CollectionToolPage";
 
 export default function App() {
     return (
         <Router>
             <Switch>
+                <Route path="/collection">
+                    <CollectionToolPage/>
+                </Route>
                 <Route path="/gacha">
                     <GachaToolPage/>
                 </Route>

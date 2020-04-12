@@ -9,6 +9,7 @@ import Divider from '@material-ui/core/Divider';
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import StarIcon from "@material-ui/icons/Star";
 import PageFrame from "./PageFrame";
+import CollectionsIcon from "@material-ui/icons/Collections";
 
 export function HomePage() {
     return (
@@ -27,6 +28,12 @@ export function HomePage() {
                                     <StarIcon/>
                                 </ListItemIcon>
                                 <ListItemText primary="Gacha"/>
+                            </ListItem>
+                            <ListItem component={RouterLink} to="/collection">
+                                <ListItemIcon>
+                                    <CollectionsIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Collection" />
                             </ListItem>
                         </List>
                     </Paper>
