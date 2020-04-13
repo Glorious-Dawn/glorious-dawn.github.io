@@ -52,7 +52,7 @@ function matchFeatures(featureA,featureB,threshold){
 
 function matchOnMain(feature,threshold){
     let matches = tracking.Brief.reciprocalMatch(mainImageCorners,mainImageDescriptors,
-        new Array(feature.length*(tracking.Brief.N/64)), feature);
+        new Array(feature.length/(tracking.Brief.N/64)), feature);
     if (threshold !== undefined)
         matches = matches.filter(x => x.confidence >= threshold);
     return matches.map(x=>x.keypoint1);
@@ -75,7 +75,7 @@ onmessage=function(e){
         const matches=matchOnMain(subImageFeatures,0.8);
         reply.push(subImageId);
         reply.push(matches);
-        reply.push(subImageFeatures);
+        // reply.push(subImageFeatures);
     }else if (op===Strings.matchSubImageFeatures){
         const subImageId=e.data[1];
         const subImageFeatures=Int32Array.from(e.data[2]);

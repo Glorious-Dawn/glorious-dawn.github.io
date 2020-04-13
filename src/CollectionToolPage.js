@@ -70,7 +70,7 @@ export function CollectionToolPage() {
     const nextWorkerRef = useRef(0);
     const savedNamesRef = useRef([]);
     const subFeaturesRef = useRef({});
-    const [saved,setSaved] = useState([]);
+    const [saved,setSaved] = useState("");
     // create workers
     useEffect(() => {
         //Fixed RandomWindowOffsets for once and for all
@@ -84,7 +84,7 @@ export function CollectionToolPage() {
                     const id=event.data[1];
                     const matches=event.data[2];
                     const subFeatures=event.data[3];
-                    subFeaturesRef.current[id]=Array.from(subFeatures);
+                    // subFeaturesRef.current[id]=Array.from(subFeatures);
                     const item=[id,matches.length];
                     item.push(
                         <div>
@@ -109,17 +109,17 @@ export function CollectionToolPage() {
         return ()=>{for (let worker of workersRef.current) worker.terminate();};}, []);
 
     const subDropCallback = function (result) {
-        const subImageData = loadImageDataOnCanvas(result, subCanvasRef.current);
-        workersRef.current[nextWorkerRef.current].postMessage([Strings.matchSubImageData, result.id, subImageData]);
-        nextWorkerRef.current = (nextWorkerRef.current + 1) % numWorkers;
-        // if (result instanceof Image) {
-        // }else{
-        //     for (let name in result){
-        //         if (!result.hasOwnProperty(name)) continue;
-        //         workersRef.current[nextWorkerRef.current].postMessage([Strings.matchSubImageFeatures, name, result[name]]);
-        //         nextWorkerRef.current = (nextWorkerRef.current + 1) % numWorkers;
-        //     }
-        // }
+        if (result instanceof Image) {
+            const subImageData = loadImageDataOnCanvas(result, subCanvasRef.current);
+            workersRef.current[nextWorkerRef.current].postMessage([Strings.matchSubImageData, result.id, subImageData]);
+            nextWorkerRef.current = (nextWorkerRef.current + 1) % numWorkers;
+        }else{
+            for (let name in result){
+                if (!result.hasOwnProperty(name)) continue;
+                workersRef.current[nextWorkerRef.current].postMessage([Strings.matchSubImageFeatures, name, result[name]]);
+                nextWorkerRef.current = (nextWorkerRef.current + 1) % numWorkers;
+            }
+        }
     };
 
     const mainDropCallback = function (image) {
@@ -141,8 +141,8 @@ export function CollectionToolPage() {
         //     matchResult[x[0]]=x[1];
         // }
         // console.log(JSON.stringify(matchResult));
-        console.log(JSON.stringify(subFeaturesRef.current));
-        // setSaved(savedNamesRef.current.join(' '));
+        // console.log(JSON.stringify(subFeaturesRef.current));
+        setSaved(savedNamesRef.current.join(' '));
     };
 
     return (
