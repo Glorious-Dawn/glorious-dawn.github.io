@@ -12,9 +12,8 @@ import Strings from "../Strings";
 *
 * Debug: Descriptors calculated looks the same between extract Feature and matchImageDataInGrayscale
 */
-
-let mainImageFeatures=[];
-let subImageFeatures=[];
+let mainImageCorners=[];
+let mainImageDescriptors=[];
 
 function matchImageDataInGrayscale(imageDataA, imageDataB, threshold) {
     let mainGray = tracking.Image.grayscale(imageDataA.data, imageDataA.width, imageDataA.height);
@@ -41,24 +40,57 @@ function matchFeatures(featureA,featureB,threshold){
         new Array(featureB.length/8), featureB);
     if (threshold !== undefined)
         matches = matches.filter(x => x.confidence >= threshold);
-    return matches.length;
+    return matches;
+    // const topN=10;
+    // matches.sort((a,b)=>b.confidence-a.confidence);
+    // matches=matches.slice(0,topN);
+    // let sum=0;
+    // for (let x of matches)
+    //     sum+=x.confidence;
+    // return sum/matches.length;
+}
+
+function matchOnMain(feature,threshold){
+    let matches = tracking.Brief.reciprocalMatch(mainImageCorners,mainImageDescriptors,
+        new Array(feature.length*(tracking.Brief.N/64)), feature);
+    if (threshold !== undefined)
+        matches = matches.filter(x => x.confidence >= threshold);
+    return matches.map(x=>x.keypoint1);
 }
 
 onmessage=function(e){
+    debugger;
     const op=e.data[0];
     let reply=[op];
     if (op===Strings.setRandomWindowOffsets){
         const windowOffset=e.data[1];
         tracking.Brief.setRandomWindowOffsets(windowOffset);
     }else if (op===Strings.setMainImageFeatures){
-        mainImageFeatures=e.data[1];
+        mainImageCorners=Int32Array.from(e.data[1]);
+        mainImageDescriptors=Int32Array.from(e.data[2]);
     }else if (op===Strings.matchSubImageData){
         const subImageId=e.data[1];
         const subImageData=e.data[2];
-        subImageFeatures=extractFeature(subImageData);
-        const matchesCount=matchFeatures(mainImageFeatures,subImageFeatures,0.8);
+        const subImageFeatures=extractFeature(subImageData);
+        const matches=matchOnMain(subImageFeatures,0.8);
         reply.push(subImageId);
-        reply.push(matchesCount);
+        reply.push(matches);
+        reply.push(subImageFeatures);
+    }else if (op===Strings.matchSubImageFeatures){
+        const subImageId=e.data[1];
+        const subImageFeatures=Int32Array.from(e.data[2]);
+        const matches=matchOnMain(subImageFeatures,0.8);
+        reply.push(subImageId);
+        reply.push(matches);
+    }else if (op===Strings.matchSubImageFeaturesBatch){
+        const batchResult=[];
+        for (let x of e.data[1]){
+            const subImageId=x[1];
+            const subImageFeatures=x[2];
+            const matches=matchOnMain(subImageFeatures,0.8);
+            batchResult.push([subImageId,matches])
+        }
+        reply.push(batchResult);
     }
     postMessage(reply);
 };

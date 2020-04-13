@@ -4,6 +4,7 @@ import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
+import Link from "@material-ui/core/Link"
 import GeneralTable from "./component/GeneralTable";
 
 // eslint-disable-next-line import/no-webpack-loader-syntax
@@ -13,25 +14,29 @@ import Button from "@material-ui/core/Button";
 
 import tracking from './cv/tracking';
 import Strings from './Strings'
+import {DropzoneArea} from "material-ui-dropzone";
 
-function handleDropImages(e, imageCallBack) {
-    e.preventDefault();
-    for (let imageFile of e.dataTransfer.files) {
-        if (!imageFile.type.match(/image.*/)) {
-            console.log("The dropped file is not an image: ", imageFile.type);
-            return;
-        }
+function handleDropFile(file, callBack) {
+    if (file.type.match(/image.*/)) {
         //call-back hell
         const reader = new FileReader();
         reader.onload = e => {
             let image = new Image();
             image.onload = () => {
-                imageCallBack(image);
+                callBack(image);
             };
-            image.id = imageFile.name.split('.')[0];
+            image.id = file.name.split('.')[0];
             image.src = e.target.result;
         };
-        reader.readAsDataURL(imageFile);
+        reader.readAsDataURL(file);
+    }else if (file.type.match("application/json")) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const data=JSON.parse(e.target.result);
+            //console.log(JSON.parse(e.target.result));
+            callBack(data);
+        };
+        reader.readAsText(file);
     }
 }
 
@@ -56,95 +61,116 @@ function drawPoints(canvasContext, points) {
 }
 
 export function CollectionToolPage() {
-    const numWorkers=2;
+    const numWorkers=8;
     const {rows: matchedItems, upsert: upsertMatchedItems, remove: removeMatchedItems} =
         useMutableSortedRows([], (a, b) => b[1] - a[1]);
     const mainCanvasRef = useRef(null);
     const subCanvasRef = useRef(null);
-    const mainImageDataRef = useRef(null);
     const workersRef = useRef([]);
     const nextWorkerRef = useRef(0);
+    const savedNamesRef = useRef([]);
+    const subFeaturesRef = useRef({});
+    const [saved,setSaved] = useState([]);
     // create workers
     useEffect(() => {
         //Fixed RandomWindowOffsets for once and for all
-        const windowOffsets=Array.from(tracking.Brief.generateRandomWindowOffsets());
-        tracking.Brief.setRandomWindowOffsets(windowOffsets);
-        // console.log(JSON.stringify(windowOffsets));
+        // const windowOffsets=Array.from(tracking.Brief.generateRandomWindowOffsets());
+        // tracking.Brief.setRandomWindowOffsets(windowOffsets);
         for (let i = 0; i < numWorkers; i++) {
             let worker = new MatchWorker();
             worker.onmessage = function (event) {
-                if (event.data[0]!==Strings.matchSubImageData){
+                if (event.data[0]===Strings.matchSubImageData || event.data[0]===Strings.matchSubImageFeatures){
+                    //Add to table
+                    const id=event.data[1];
+                    const matches=event.data[2];
+                    const subFeatures=event.data[3];
+                    subFeaturesRef.current[id]=Array.from(subFeatures);
+                    const item=[id,matches.length];
+                    item.push(
+                        <div>
+                            <Button variant="contained" color="primary"
+                                    onClick={e => drawPoints(mainCanvasRef.current.getContext('2d'),matches)}>Draw</Button>
+                            <Button variant="contained" color="secondary"
+                                    onClick={e => {
+                                        savedNamesRef.current.push(id);
+                                        removeMatchedItems(item);
+                                    }}>Add</Button>
+                        </div>
+                    );
+                    upsertMatchedItems(item);
+                }else{
                     console.log(event.data[0]);
-                    return;
                 }
-                // const feature = event.data[1];
-                // dataRef.current[id]=feature;
-                // const matches=event.data[1];
-                // console.log("worker " + i + ": Image " + event.data[0] + ' matches=' + matches.length);
-                // drawPoints(mainCanvasRef.current.getContext('2d'), matches.map(x => x.keypoint1));
-                //Add to table
-                const item=[event.data[1],event.data[2]];
-                // const item=[id,matches.length];
-                item.push(
-                    <Button variant="contained" color="secondary"
-                            onClick={e => removeMatchedItems(item)}>Del</Button>
-                );
-                upsertMatchedItems(item);
             };
-            worker.postMessage([Strings.setRandomWindowOffsets,windowOffsets]);
+            // worker.postMessage([Strings.setRandomWindowOffsets,windowOffsets]);
             workersRef.current.push(worker);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
         return ()=>{for (let worker of workersRef.current) worker.terminate();};}, []);
 
-    const subDropCallback = function (image) {
-        const subImageData = loadImageDataOnCanvas(image, subCanvasRef.current);
-        // workersRef.current[nextWorkerRef.current].postMessage([image.id,mainImageDataRef.current,subImageData]);
-        // workersRef.current[nextWorkerRef.current].postMessage([image.id,subImageData]);
-        // const matches=matchImageDataInGrayscale(subImageData,mainImageDataRef.current,0.8);
-        // drawPoints(mainCanvasRef.current.getContext('2d'),matches.map(x=>x.keypoint2));
-        workersRef.current[nextWorkerRef.current].postMessage([Strings.matchSubImageData,image.id,subImageData]);
-        nextWorkerRef.current=(nextWorkerRef.current+1)%numWorkers;
+    const subDropCallback = function (result) {
+        const subImageData = loadImageDataOnCanvas(result, subCanvasRef.current);
+        workersRef.current[nextWorkerRef.current].postMessage([Strings.matchSubImageData, result.id, subImageData]);
+        nextWorkerRef.current = (nextWorkerRef.current + 1) % numWorkers;
+        // if (result instanceof Image) {
+        // }else{
+        //     for (let name in result){
+        //         if (!result.hasOwnProperty(name)) continue;
+        //         workersRef.current[nextWorkerRef.current].postMessage([Strings.matchSubImageFeatures, name, result[name]]);
+        //         nextWorkerRef.current = (nextWorkerRef.current + 1) % numWorkers;
+        //     }
+        // }
     };
 
     const mainDropCallback = function (image) {
-        const imageData = loadImageDataOnCanvas(image, mainCanvasRef.current);
-        mainImageDataRef.current=imageData;
-        //Distribute main image features to all workers
-        const grayscale = tracking.Image.grayscale(imageData.data, imageData.width, imageData.height);
-        const corners = tracking.Fast.findCorners(grayscale, imageData.width, imageData.height);
-        const descriptors = tracking.Brief.getDescriptors(grayscale, imageData.width, corners);
-        for (let worker of workersRef.current){
-            worker.postMessage([Strings.setMainImageFeatures,descriptors]);
+        if (image instanceof Image){
+            const imageData = loadImageDataOnCanvas(image, mainCanvasRef.current);
+            //Distribute main image features to all workers
+            const grayscale = tracking.Image.grayscale(imageData.data, imageData.width, imageData.height);
+            const corners = tracking.Fast.findCorners(grayscale, imageData.width, imageData.height);
+            const descriptors = tracking.Brief.getDescriptors(grayscale, imageData.width, corners);
+            for (let worker of workersRef.current){
+                worker.postMessage([Strings.setMainImageFeatures,corners,descriptors]);
+            }
         }
     };
 
     const handleExport = function(e){
-        const matchResult={};
-        for (const x of matchedItems){
-            matchResult[x[0]]=x[1];
-        }
-        console.log(JSON.stringify(matchResult));
+        // const matchResult={};
+        // for (const x of matchedItems){
+        //     matchResult[x[0]]=x[1];
+        // }
+        // console.log(JSON.stringify(matchResult));
+        console.log(JSON.stringify(subFeaturesRef.current));
+        // setSaved(savedNamesRef.current.join(' '));
     };
 
     return (
         <PageFrame title="Collection Tool">
             <Grid container spacing={3}>
-                <Grid item xs={12} md={9} lg={9}>
-                    <Paper onDragOver={e => e.preventDefault()} onDrop={e => handleDropImages(e, mainDropCallback)}>
-                        <canvas ref={mainCanvasRef}/>
-                    </Paper>
+                <Grid item xs={6}>
+                    <DropzoneArea dropzoneText="Drop or Click: Main image" filesLimit={2} maxFileSize={Infinity}
+                                  showPreviewsInDropzone={false} showAlerts={false}
+                                  onDrop={file => handleDropFile(file, mainDropCallback)}/>
+                </Grid>
+                <Grid item xs={6}>
+                    <DropzoneArea dropzoneText="Drop or Click: Sub images or Features JSON" filesLimit={1024} maxFileSize={Infinity}
+                                  showPreviewsInDropzone={false} showAlerts={false}
+                                  onDrop={file => handleDropFile(file, subDropCallback)}/>
+                    <Link href="/data/ssr+040320.json" download>Download SSR+040320.json</Link>
+                </Grid>
+                <Grid item xs={12}>
+                    {/*<Paper onDragOver={e => e.preventDefault()} onDrop={e => handleDropImages(e, subDropCallback)}/>*/}
+                    <canvas ref={mainCanvasRef} width={0} height={0}/>
+                    <canvas ref={subCanvasRef} hidden/>
+                </Grid>
+                <Grid item xs={12}>
+                    <Button size="large" variant="contained" color="primary" onClick={handleExport}>Export</Button>
+                    <TextField variant="filled" value={saved} disabled={true}/>
+                    <GeneralTable headers={['Name','Matches','Actions']} items={matchedItems}/>
                 </Grid>
             </Grid>
-            <Grid item xs={12} md={3} lg={3}>
-                <Paper onDragOver={e => e.preventDefault()} onDrop={e => handleDropImages(e, subDropCallback)}>
-                    <canvas ref={subCanvasRef}/>
-                </Paper>
-            </Grid>
-            <Grid item xs={12}>
-                <Button onClick={handleExport}>Export</Button>
-                <GeneralTable headers={['Name','Matches','Remove']} items={matchedItems}/>
-            </Grid>
+            {/*style={{height:'100%'}}*/}
         </PageFrame>
     );
 }
