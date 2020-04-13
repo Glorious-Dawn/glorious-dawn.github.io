@@ -2,7 +2,7 @@
 
 # dependencies
 /node_modules
-/deresute_img
+/local
 /.pnp
 .pnp.js
 
