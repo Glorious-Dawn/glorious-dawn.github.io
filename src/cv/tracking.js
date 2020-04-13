@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * tracking - A modern approach for Computer Vision on the web.
  * @author Eduardo Lundgren <edu@rdo.io>
@@ -765,7 +766,6 @@ let tracking={};
             w3 = w1 + rectHeight * width;
             w4 = w3 + rectWidth;
             rectsSum += (integralImage[w1] - integralImage[w2] - integralImage[w3] + integralImage[w4]) * rectWeight;
-            // TODO: Review the code below to analyze performance when using it instead.
             // w1 = (rectLeft - 1) + (rectTop - 1) * width;
             // w2 = (rectLeft + rectWidth - 1) + (rectTop + rectHeight - 1) * width;
             // w3 = (rectLeft - 1) + (rectTop + rectHeight - 1) * width;
@@ -1440,6 +1440,30 @@ let tracking={};
   tracking.EPnP.solve = function(objectPoints, imagePoints, cameraMatrix) {};
 }());
 
-tracking.Fast.THRESHOLD=20;
+(function() {
+  /**
+   * Glorious-Dawn: custom additional initialization   *
+   */
+  tracking.Fast.THRESHOLD=20;
+
+  // Used to eliminate the randomness when feature extractor needs to be stored and reused
+  tracking.Brief.setRandomWindowOffsets=function(windowOffsets){
+    this.randomImageOffsets_={};
+    this.randomWindowOffsets_=Int32Array.from(windowOffsets);
+  };
+
+  tracking.Brief.generateRandomWindowOffsets=function(){
+    var windowPosition = 0;
+    var windowOffsets = new Int32Array(4 * this.N);
+    for (var i = 0; i < this.N; i++) {
+      windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+      windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+      windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+      windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+    }
+    return windowOffsets;
+  };
+
+}());
 
 module.exports=tracking;

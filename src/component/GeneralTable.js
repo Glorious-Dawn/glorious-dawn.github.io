@@ -14,14 +14,14 @@ export default function MatchedTable(props) {
         <TableContainer component={Paper}>
             <Table aria-label="simple table">
                 <TableHead>
-                    <TableRow>
-                        {headers.map(x => (<TableCell>{x}</TableCell>))}
+                    <TableRow key={'headers'}>
+                        {headers.map(x => (<TableCell key={`headers-${x}`} >{x}</TableCell>))}
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {items.map(item =>
                         <TableRow key={item[0]}>
-                            {item.map(x => (<TableCell>{x}</TableCell>))}
+                            {item.map((x,i) => (<TableCell key={`${item[0]}-${headers[i]}`} >{x}</TableCell>))}
                         </TableRow>)
                     }
                 </TableBody>

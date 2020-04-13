@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect} from 'react';
 
 export const useEventListener=(eventName, handler, element)=>{
     // Create a ref that stores handler

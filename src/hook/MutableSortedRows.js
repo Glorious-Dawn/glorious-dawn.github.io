@@ -26,7 +26,6 @@ export const useMutableSortedRows = (initialValue,compareFn=(a,b)=>a[0]-b[0]) =>
 
     return {
         rows,
-        setRows,
         upsert,
         remove
     }
